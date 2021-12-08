@@ -10,14 +10,6 @@ MyDB = pymysql.connect(user='root',
 
 def useless_run_koef(connection, filename, date_from, date_to):
     cur = connection.cursor()
-    try:
-        date1 = QtCore.QDate.toPyDate(date_from)
-    except:
-        date1 = date_from
-    try:
-        date2 = QtCore.QDate.toPyDate(date_to)
-    except:
-        date2 = date_to
     f = open(filename, 'w')
     f.write('Id грузовика;' + 'Коэффициент;' + '\n')
     cur.execute('SELECT Id FROM trucks WHERE Sold = 0 ORDER BY Id')
@@ -27,11 +19,11 @@ def useless_run_koef(connection, filename, date_from, date_to):
     for truck in trucks:
         cur.execute(f'SELECT IFNULL(SUM(Distance), 0) FROM routes WHERE Id IN '
                     f'(SELECT Route_Id FROM route_date WHERE Truck_Id = {truck[0]} AND Having_Cargo = 0 AND '
-                    f'Departure_Date >= "{date1}" AND Arrival_Date <= "{date2}")')
+                    f'Departure_Date >= "{date_to}" AND Arrival_Date <= "{date_from}")')
         empty = cur.fetchone()[0]
         cur.execute(f'SELECT IFNULL(SUM(Distance), 0) FROM routes WHERE Id IN '
                     f'(SELECT Route_Id FROM route_date WHERE Truck_Id = {truck[0]} AND Having_Cargo = 1 AND '
-                    f'Departure_Date >= "{date1}" AND Arrival_Date <= "{date2}")')
+                    f'Departure_Date >= "{date_to}" AND Arrival_Date <= "{date_from}")')
         full = cur.fetchone()[0]
         try:
             koef = float(empty) / float(full)
@@ -51,50 +43,42 @@ def downtime_koef(connection, filename, date_from, date_to):
     cur = connection.cursor()
     f = open(filename, 'w')
     f.write('Id грузовика;' + 'Коэффициент;' + '\n')
-    try:
-        date1 = QtCore.QDate.toPyDate(date_from)
-    except:
-        date1 = date_from
-    try:
-        date2 = QtCore.QDate.toPyDate(date_to)
-    except:
-        date2 = date_to
     cur.execute('SELECT Id FROM trucks WHERE Sold = 0 ORDER BY Id')
     trucks = cur.fetchall()
     all_downtime = datetime.timedelta(0)
     all_driving_time = datetime.timedelta(0)
     for truck in trucks:
         downtime = datetime.timedelta(0)
-        cur.execute(f'SELECT Start_downtime, IF("{date2}" < IFNULL(End_downtime, "{date2}"), '
-                    f'"{date2}", IFNULL(End_downtime, "{date2}")) FROM protocol_truck_city '
+        cur.execute(f'SELECT Start_downtime, IF("{date_from}" < IFNULL(End_downtime, "{date_from}"), '
+                    f'"{date_from}", IFNULL(End_downtime, "{date_from}")) FROM protocol_truck_city '
                     f'WHERE Truck_Id = {truck[0]} AND '
-                    f'Start_downtime >= "{date1}" AND Start_downtime <= "{date2}"')
+                    f'Start_downtime >= "{date_to}" AND Start_downtime <= "{date_from}"')
         downtime_dates = cur.fetchall()
         for date in downtime_dates:
             try:
-                _date1 = datetime.date.fromisoformat(date[1])
+                date1 = datetime.date.fromisoformat(date[1])
             except:
-                _date1 = date[1]
+                date1 = date[1]
             try:
-                _date0 = datetime.date.fromisoformat(date[0])
+                date0 = datetime.date.fromisoformat(date[0])
             except:
-                _date0 = date[0]
-            downtime += _date1 - _date0
+                date0 = date[0]
+            downtime += date1 - date0
         driving_time = datetime.timedelta(0)
-        cur.execute(f'SELECT Departure_Date, IF("{date2}" < Arrival_Date, "{date2}", Arrival_Date) FROM route_date '
+        cur.execute(f'SELECT Departure_Date, IF("{date_from}" < Arrival_Date, "{date_from}", Arrival_Date) FROM route_date '
                     f'WHERE Truck_Id = {truck[0]} AND '
-                    f'Departure_Date >= "{date1}" AND Departure_Date <= "{date2}"')
+                    f'Departure_Date >= "{date_to}" AND Departure_Date <= "{date_from}"')
         driving_dates = cur.fetchall()
         for date in driving_dates:
             try:
-                _date1 = datetime.date.fromisoformat(date[1])
+                date1 = datetime.date.fromisoformat(date[1])
             except:
-                _date1 = date[1]
+                date1 = date[1]
             try:
-                _date0 = datetime.date.fromisoformat(date[0])
+                date0 = datetime.date.fromisoformat(date[0])
             except:
-                _date0 = date[0]
-            driving_time += _date1 - _date0
+                date0 = date[0]
+            driving_time += date1 - date0
         try:
             koef = float(downtime.days) / float(driving_time.days)
         except:
@@ -151,25 +135,30 @@ def financial_report(connection, filename, year):
                 date_to = datetime.date(year + 1, 1, 1)
             else:
                 date_to = datetime.date(year, month + 1, 1)
-            cur.execute('SELECT Cost FROM buy_truck')
+            cur.execute('SELECT Cost FROM buy_truck '
+                        f'WHERE Date >= "{date_from}" AND Date <= "{date_to}"')
             bt_costs = cur.fetchall()
             for bt_cost in bt_costs:
-                month_expenses += bt_cost
-            cur.execute('SELECT Cost FROM sell_truck')
+                month_expenses += bt_cost[0]
+            cur.execute('SELECT Cost FROM sell_truck '
+                        f'WHERE Date >= "{date_from}" AND Date <= "{date_to}"')
             st_costs = cur.fetchall()
             for st_cost in st_costs:
-                month_income += st_cost
-            cur.execute('SELECT Payment FROM orders')
+                month_income += st_cost[0]
+            cur.execute('SELECT Payment FROM orders '
+                        f'WHERE Date >= "{date_from}" AND Date <= "{date_to}"')
             o_costs = cur.fetchall()
             for o_cost in o_costs:
-                month_income += (o_cost / 1.1) * 0.1
+                month_income += (o_cost[0] / 1.1) * 0.1
             cur.execute('SELECT Id, Downtime_costs FROM trucks WHERE Sold = 0 ORDER BY Id')
             trucks = cur.fetchall()
             for truck in trucks:
-                cur.execute(f'SELECT Start_downtime, IF("{date_to}" < IFNULL(End_downtime, "{date_to}"), '
+                cur.execute(f'SELECT IF(Start_downtime < "{date_from}", "{date_from}", Start_downtime), '
+                            f'IF("{date_to}" < IFNULL(End_downtime, "{date_to}"), '
                             f'"{date_to}", IFNULL(End_downtime, "{date_to}")) FROM protocol_truck_city '
                             f'WHERE Truck_Id = {truck[0]} AND '
-                            f'Start_downtime >= "{date_from}" AND Start_downtime <= "{date_to}"')
+                            f'Start_downtime <= "{date_to}" AND '
+                            f'"{date_to}" <= IFNULL(End_downtime, "{date_to}")')
                 downtime_dates = cur.fetchall()
                 downtime = datetime.timedelta(0)
                 for date in downtime_dates:
@@ -197,4 +186,4 @@ def financial_report(connection, filename, year):
             str(year_income - year_expenses) + '\n')
     f.close()
 if __name__ == '__main__':
-    financial_report(MyDB, 'test.csv', 2021)
+    downtime_koef(MyDB, 'test.csv', '2021-12-02', '2021-12-07')

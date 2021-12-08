@@ -21,10 +21,13 @@ def num_of_trips(capacity, weight):
         weight -= capacity
     return num
 
-def send_truck(connection, city1_name, city2_name, cargo_id, weight, date):
+def send_truck(connection, city1_name, city2_name, cargo_name, weight, date):
     payment = 0
     new_date = date
     cur = connection.cursor()
+    cur.execute('SELECT Id FROM Cargo '
+                f'WHERE Name = "{cargo_name}"')
+    cargo_id = cur.fetchone()[0]
     cur.execute('SELECT Id FROM Cities '
                 f'WHERE Name = "{city1_name}"')
     city1 = cur.fetchone()[0]
@@ -113,6 +116,10 @@ def send_truck(connection, city1_name, city2_name, cargo_id, weight, date):
                 f'VALUES ({order_id}, {route_id}, {truck_id}, {rate_id}, {cargo_id}, {weight})')
     cur.execute('SELECT Max(Id) FROM Orders')
     max_id = cur.fetchone()[0]
+    cur.execute('SELECT Transportation_cost FROM rates '
+                f'WHERE Id = {rate_id}')
+    rate_cost = cur.fetchone()[0]
+    payment += distance * rate_cost
     cur.execute('UPDATE Orders '
                 f'SET Payment = {payment * 1.1} '
                 f'WHERE Id = {max_id}')
@@ -137,11 +144,11 @@ def update_cities(connection, city1, city2, weight):
 def update_cargo(connection, cargo, weight):
     cur = connection.cursor()
     cur.execute('SELECT Ordered_weight FROM Cargo '
-                f'WHERE Id = {cargo}')
+                f'WHERE Name = "{cargo}"')
     cargo_weight = cur.fetchone()[0]
     cur.execute('UPDATE Cargo '
                 f'SET Ordered_weight = {cargo_weight + weight} '
-                f'WHERE Id = {cargo}')
+                f'WHERE Name = "{cargo}"')
     connection.commit()
 
 if __name__ == '__main__':

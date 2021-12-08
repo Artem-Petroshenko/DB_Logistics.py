@@ -8,9 +8,9 @@ from Reports import downtime_koef
 
 class PeriodWindow(QtWidgets.QWidget):
     def FromDateEdit_slot(self, date):
-        self.FromDateEditDate = date
+        self.FromDateEditDate = QtCore.QDate.toPyDate(date)
     def ToDateEdit_slot(self, date):
-        self.ToDateEditDate = date
+        self.ToDateEditDate = QtCore.QDate.toPyDate(date)
     def ReportButton_slot(self):
         if self.rep == 1:
             useless_run_koef(self.connection, 'useless_koef.csv',

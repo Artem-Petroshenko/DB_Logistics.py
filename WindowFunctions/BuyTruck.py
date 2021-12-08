@@ -52,7 +52,7 @@ class BuyTruckWindow(QtWidgets.QWidget):
         for type in types:
             self.ui.CargoTypeComboBox.insertItem(type[0], type[1])
     def PurchaseDateEdit_slot(self, date):
-        self.PurchaseDateEditDate = date
+        self.PurchaseDateEditDate = QtCore.QDate.toPyDate(date)
     def CityComboBox_slot(self, index):
         self.CityComboBoxIndex = index + 1
     def CityComboBox_update(self):

@@ -35,35 +35,35 @@ def research(connection):
     for n in (1000, 10000, 100000):
         drop_to_start(connection, n)
         key_search(cur, n)
-        non_key_search(cur, n)
-        mask_search(cur, 'a%b', n)
+        #non_key_search(cur, n)
+        #mask_search(cur, 'a%b', n)
 
-        drop_to_start(connection, n)
-        insert_row(cur, n)
+        #drop_to_start(connection, n)
+        #insert_row(cur, n)
 
-        drop_to_start(connection, n)
-        insert_row_group(cur, n)
+        #drop_to_start(connection, n)
+        #insert_row_group(cur, n)
 
-        drop_to_start(connection, n)
+        #drop_to_start(connection, n)
         key_alter(cur, n)
 
-        drop_to_start(connection, n)
-        non_key_alter(cur, n)
+        #drop_to_start(connection, n)
+        #non_key_alter(cur, n)
 
-        drop_to_start(connection, n)
-        key_delete(cur, n)
+        #drop_to_start(connection, n)
+        #key_delete(cur, n)
 
-        drop_to_start(connection, n)
-        non_key_delete(cur, n)
+        #drop_to_start(connection, n)
+        #non_key_delete(cur, n)
 
-        drop_to_start(connection, n)
-        group_delete(cur, n)
+        #drop_to_start(connection, n)
+        #group_delete(cur, n)
 
-        drop_to_start(connection, n)
-        compress_200_del(cur, n)
+        #drop_to_start(connection, n)
+        #compress_200_del(cur, n)
 
-        drop_to_start(connection, n)
-        compress_200_remain(cur, n)
+        #drop_to_start(connection, n)
+        #compress_200_remain(cur, n)
         print('\n\n')
 
 def key_search(cur, rownum):
@@ -155,11 +155,9 @@ def non_key_delete(cur, rownum):
 
 def group_delete(cur, rownum):
     start = time.perf_counter_ns()
-    for i in range(100):
-        cur.execute('DELETE FROM research '
-                    'LIMIT 200')
+    cur.execute('DELETE FROM research '
+                'LIMIT 200')
     timer = time.perf_counter_ns() - start
-    timer /= 100
     print("Group deleting time on", rownum, "elements is:", timer / 1000000)
 
 def compress_200_del(cur, rownum):

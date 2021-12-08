@@ -27,7 +27,7 @@ class OrderWindow(QtWidgets.QWidget):
         self.CargoTypeComboBox_update()
         self.ui.CargoTypeComboBox.currentIndexChanged.connect(self.CargoTypeComboBox_slot)
         self.CargoComboBox_update()
-        self.ui.CargoComboBox.currentIndexChanged.connect(self.CargoComboBox_slot)
+        self.ui.CargoComboBox.currentTextChanged.connect(self.CargoComboBox_slot)
         self.WeightSpinBoxValue = self.ui.WeightSpinBox.minimum()
         self.ui.WeightSpinBox.valueChanged.connect(self.WeightSpinBox_slot)
         self.ui.OrderButton.clicked.connect(self.OrderButton_slot)
@@ -35,24 +35,24 @@ class OrderWindow(QtWidgets.QWidget):
     def OrderButton_slot(self):
         insert_order(self.connection, self.OrderDateEditDate)
         send_truck(self.connection, self.DepartureComboBoxName,
-                   self.ArrivalComboBoxName, self.CargoComboBoxIndex,
+                   self.ArrivalComboBoxName, self.CargoComboBoxText,
                    self.WeightSpinBoxValue, self.OrderDateEditDate)
-        update_cargo(self.connection, self.CargoComboBoxIndex, self.WeightSpinBoxValue)
+        update_cargo(self.connection, self.CargoComboBoxText, self.WeightSpinBoxValue)
         update_cities(self.connection, self.DepartureComboBoxName,
                       self.ArrivalComboBoxName, self.WeightSpinBoxValue)
     def WeightSpinBox_slot(self, value):
         self.WeightSpinBoxValue = value
     def OrderDateEdit_slot(self, date):
-        self.OrderDateEditDate = date
-    def CargoComboBox_slot(self, index):
-        self.CargoComboBoxIndex = index + 1
+        self.OrderDateEditDate = QtCore.QDate.toPyDate(date)
+    def CargoComboBox_slot(self, text):
+        self.CargoComboBoxText = text
     def CargoComboBox_update(self):
         cur = self.connection.cursor()
         cur.execute('SELECT Id, Name FROM Cargo '
                     f'WHERE Cargo_type_Id = {self.CargoTypeComboBoxIndex} '
                     'ORDER BY Id')
         cargoes = cur.fetchall()
-        self.CargoComboBoxIndex = cargoes[0][0]
+        self.CargoComboBoxText = cargoes[0][1]
         for cargo in cargoes:
             self.ui.CargoComboBox.insertItem(cargo[0], "{}".format(cargo[1]))
     def CargoTypeComboBox_slot(self, index):

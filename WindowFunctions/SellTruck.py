@@ -20,6 +20,7 @@ class SellTruckWindow(QtWidgets.QWidget):
         self.ui.TruckIdComboBox.currentTextChanged.connect(self.TruckIdComboBox_slot)
         self.SellDateEditDate = datetime.date.today()
         self.ui.SellDateEdit.setDate(datetime.date.today())
+        self.ui.SellDateEdit.setCalendarPopup(1)
         self.ui.SellDateEdit.dateChanged.connect(self.SellDateEdit_slot)
         self.ui.SellButton.clicked.connect(self.SellButton_slot)
     def CustomerEdit_slot(self, text):
@@ -38,7 +39,7 @@ class SellTruckWindow(QtWidgets.QWidget):
         for id in ids:
             self.ui.TruckIdComboBox.insertItem(id[0], '{}'.format(id[0]))
     def SellDateEdit_slot(self, date):
-        self.SellDateEditDate = date
+        self.SellDateEditDate = QtCore.QDate.toPyDate(date)
     def SellButton_slot(self):
         insert_sell_truck(self.connection, self.TruckIdComboBoxIndex,
                           self.CustomerEditText, self.SellDateEditDate)
