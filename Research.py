@@ -35,38 +35,41 @@ def research(connection):
     for n in (1000, 10000, 100000):
         drop_to_start(connection, n)
         key_search(cur, n)
-        #non_key_search(cur, n)
-        #mask_search(cur, 'a%b', n)
+        non_key_search(cur, n)
+        mask_search(cur, 'a%b', n)
 
-        #drop_to_start(connection, n)
-        #insert_row(cur, n)
+        drop_to_start(connection, n)
+        insert_row(cur, n)
 
-        #drop_to_start(connection, n)
-        #insert_row_group(cur, n)
+        drop_to_start(connection, n)
+        insert_row_group(cur, n)
 
-        #drop_to_start(connection, n)
+        drop_to_start(connection, n)
         key_alter(cur, n)
 
-        #drop_to_start(connection, n)
-        #non_key_alter(cur, n)
+        drop_to_start(connection, n)
+        non_key_alter(cur, n)
 
-        #drop_to_start(connection, n)
-        #key_delete(cur, n)
+        drop_to_start(connection, n)
+        key_delete(cur, n)
 
-        #drop_to_start(connection, n)
-        #non_key_delete(cur, n)
+        drop_to_start(connection, n)
+        non_key_delete(cur, n)
 
-        #drop_to_start(connection, n)
-        #group_delete(cur, n)
+        drop_to_start(connection, n)
+        group_delete(cur, n)
 
-        #drop_to_start(connection, n)
-        #compress_200_del(cur, n)
+        drop_to_start(connection, n)
+        compress_200_del(cur, n)
 
-        #drop_to_start(connection, n)
-        #compress_200_remain(cur, n)
+        drop_to_start(connection, n)
+        compress_200_remain(cur, n)
         print('\n\n')
 
 def key_search(cur, rownum):
+    for i in range(100):
+        random.seed()
+        cur.execute(f'SELECT * FROM Research WHERE Id = {random.randint(1, rownum)}')
     start = time.perf_counter_ns()
     for i in range(100):
         random.seed()
@@ -95,7 +98,7 @@ def mask_search(cur, mask, rownum):
 def insert_row(cur, rownum):
     start = time.perf_counter_ns()
     for i in range(100):
-        cur.execute('INSERT INTO research (Name, Number)'
+        cur.execute('INSERT INTO research (Name, Number) '
                     f'VALUES ("{random_varchar(4)}", {random.randint(1, rownum)})')
     timer = time.perf_counter_ns() - start
     timer /= 100
@@ -106,7 +109,7 @@ def insert_row_group(cur, rownum):
     for i in range(100):
         for j in range(200):
             cur.execute('INSERT INTO research (Name, Number) '
-                        f'VALUES ( "{random_varchar(4)}", {random.randint(1, rownum)})')
+                        f'VALUES ("{random_varchar(4)}", {random.randint(1, rownum)})')
     timer = time.perf_counter_ns() - start
     timer /= 100
     print("Group of rows insertion time on", rownum, "elements is:", timer / 1000000)

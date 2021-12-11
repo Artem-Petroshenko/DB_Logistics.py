@@ -1,6 +1,6 @@
 import sys
 import pymysql
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtWidgets
 from Designer.MainWindow import Ui_MainWindow
 from WindowFunctions.BuyTruck import BuyTruckWindow
 from WindowFunctions.SellTruck import SellTruckWindow
